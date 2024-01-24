@@ -1,3 +1,3 @@
-# Commit from windows terminal
+# Neovim config files
 
-This is a commit from windows powershell
+Neovim configuration for Windows. Using Oh-My-Posh as terminal.
