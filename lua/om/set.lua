@@ -1,7 +1,7 @@
 vim.opt.nu = true
 vim.opt.relativenumber = true
 
-vim.opt.concealevel = 1
+vim.opt.conceallevel = 1
 
 vim.opt.mousehide = true
 
