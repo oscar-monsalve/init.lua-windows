@@ -1,7 +1,8 @@
 vim.opt.nu = true
 vim.opt.relativenumber = true
 
-vim.opt.conceallevel = 1
+-- Options for obsidian plugin
+vim.opt.conceallevel = 2
 
 vim.opt.mousehide = true
 
@@ -34,4 +35,5 @@ vim.opt.updatetime = 50
 vim.opt.splitright = false
 
 vim.g.mapleader = " "
+vim.g.maplocalleader = " "
 
