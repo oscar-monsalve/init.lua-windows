@@ -1,11 +1,5 @@
 require("obsidian").setup({
-  workspaces = {
-    {
-      -- name = "Notes",
-      -- path = "~/second-brain",
-      -- path = "/Users/omerhamerman/Library/Mobile Documents/iCloud~md~obsidian/Documents/Notes",
-    },
-  },
+  workspaces = {},
   completion = {
     -- Set to false to disable completion.
     nvim_cmp = true,
@@ -50,12 +44,15 @@ require("obsidian").setup({
           opts = { noremap = false, expr = true, buffer = true },
       },
       -- Toggle check-boxes.
-      ["<leader>ll"] = {
-          action = function()
-              return require("obsidian").util.toggle_checkbox()
-          end,
-          opts = { buffer = true },
+      n = {
+          ["<leader>ch"] = {
+              action = function()
+                  return require("obsidian").util.toggle_checkbox()
+              end,
+              opts = { buffer = true },
+          }
       },
+
   },
 
   -- Optional, configure additional syntax highlighting / extmarks.
