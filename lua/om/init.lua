@@ -1,6 +1,6 @@
 require("om.remap")
-require("om.packer")
 require("om.set")
+require("om.packer")
 
 local augroup = vim.api.nvim_create_augroup
 local omGroup = augroup('omGroup', {})
