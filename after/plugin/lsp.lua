@@ -24,7 +24,18 @@ require('mason-lspconfig').setup({
       local lua_opts = lsp_zero.nvim_lua_ls()
       require('lspconfig').lua_ls.setup(lua_opts)
     end,
+
+    arduino_language_server = function()
+      require('lspconfig').arduino_language_server.setup{
+          cmd = {"arduino-language-server"},
+          init_options = {
+              cliConfigPath = "~/AppData/Local/Arduino15/arduino-cli.yaml"
+          }
+      }
+    end,
+
   }
+
 })
 
 local cmp = require('cmp')
@@ -32,6 +43,7 @@ local cmp_select = {behavior = cmp.SelectBehavior.Select}
 
 cmp.setup({
   sources = {
+    {name = 'Arduino15'},
     {name = 'path'},
     {name = 'nvim_lsp'},
     {name = 'nvim_lua'},
