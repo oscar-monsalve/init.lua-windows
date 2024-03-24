@@ -1,3 +1,5 @@
 # Neovim config files
 
-Neovim configuration for Windows. Using Oh-My-Posh as terminal.
+Neovim configuration for Windows.
+
+Package manager : lazy.nvim.
