@@ -30,6 +30,19 @@ return {
 
             },
             handlers = {
+
+                arduino_language_server = function()
+                    require('lspconfig').arduino_language_server.setup({
+                        cmd = {
+                            'arduino-language-server',
+                            '-cli-config', '%USERPROFILE%/AppData/Local/Arduino15/arduino-cli.yaml',
+                            '-cli', '%USERPROFILE%/AppData/Local/Programs/Arduino IDE/',
+                            '-clangd', '%USERPROFILE%/AppData/Local/nvim-data/mason/packages/clangd/clangd_17.0.3/bin',
+                            --'fqbn', 'esp32:esp32:esp'
+                        }
+                    })
+                end,
+
                 function(server_name) -- default handler (optional)
 
                     require("lspconfig")[server_name].setup {
@@ -37,20 +50,21 @@ return {
                     }
                 end,
 
+                --[[
                 ["arduino_language_server"] = function ()
                     local lspconfig = require("lspconfig")
                     lspconfig.arduino_language_server.setup {
                         cmd = {
                             'arduino-language-server',
-                            '-cli-config', '%USERPROFILE%/AppData/Local/Arduino15/arduino-cli.yaml',
-                            '-cli', '%USERPROFILE%/AppData/Local/Programs/Arduino IDE/arduino_cli',
-                            '-clangd', '%USERPROFILE%/AppData/Local/nvim-data/mason/packages/clangd/clangd_17.0.3/bin',
-                            'fqbn', 'esp32:esp32:esp'
+                            --'-cli-config', '%USERPROFILE%/AppData/Local/Arduino15/arduino-cli.yaml',
+                            --'-cli', '%USERPROFILE%/AppData/Local/Programs/Arduino IDE/arduino_cli.exe',
+                            --'-clangd', '%USERPROFILE%/AppData/Local/nvim-data/mason/packages/clangd/clangd_17.0.3/bin/clangd.exe',
+                            --'fqbn', 'esp32:esp32:esp'
                         }
                     }
 
                 end,
-
+                ]]--
 
                 ["lua_ls"] = function()
                     local lspconfig = require("lspconfig")
