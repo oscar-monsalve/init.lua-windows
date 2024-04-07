@@ -1,5 +1,4 @@
 return{
-
     "epwalsh/obsidian.nvim",
     version = "*",  -- recommended, use latest release instead of latest commit
     lazy = true,
@@ -46,6 +45,13 @@ return{
                     end,
                     opts = { buffer = true },
                 },
+            },
+            -- Smart action depending on context, either follow link or toggle checkbox.
+            ["<cr>"] = {
+                action = function()
+                    return require("obsidian").util.smart_action()
+                end,
+                opts = { buffer = true },
             },
 
             -- Where to put new notes created from completion. Valid options are

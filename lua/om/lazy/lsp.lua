@@ -35,10 +35,10 @@ return {
                     require('lspconfig').arduino_language_server.setup({
                         cmd = {
                             'arduino-language-server',
-                            '-cli-config', '%USERPROFILE%/AppData/Local/Arduino15/arduino-cli.yaml',
-                            '-cli', '%USERPROFILE%/AppData/Local/Programs/Arduino IDE/',
-                            '-clangd', '%USERPROFILE%/AppData/Local/nvim-data/mason/packages/clangd/clangd_17.0.3/bin',
-                            --'fqbn', 'esp32:esp32:esp'
+                            '-cli-config', '~/AppData/Local/Arduino15/arduino-cli.yaml',
+                            '-cli', '~/AppData/Local/Programs/Arduino IDE/',
+                            '-clangd', '~/AppData/Local/nvim-data/mason/packages/clangd/clangd_17.0.3/bin',
+                            'fqbn', 'esp32:esp32:esp'
                         }
                     })
                 end,
