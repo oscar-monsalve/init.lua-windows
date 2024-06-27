@@ -26,9 +26,8 @@ return {
         require("mason").setup()
         require("mason-lspconfig").setup({
             ensure_installed = {
-                "lua_ls", "rust_analyzer", 'clangd', 'texlab', 'pylsp', 'arduino_language_server'
+                "lua_ls", "rust_analyzer", "clangd", "texlab", "pylsp", "arduino_language_server"},
 
-            },
             handlers = {
 
                 arduino_language_server = function()
@@ -105,7 +104,7 @@ return {
         })
 
         vim.diagnostic.config({
-            -- update_in_insert = true,
+            update_in_insert = true,
             float = {
                 focusable = false,
                 style = "minimal",

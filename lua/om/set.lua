@@ -32,8 +32,8 @@ vim.opt.isfname:append("@-@")
 
 vim.opt.updatetime = 50
 
-vim.opt.textwidth = 110
-vim.opt.colorcolumn = "140"
+-- vim.opt.textwidth = 150
+vim.opt.colorcolumn = "118"
 
 vim.opt.splitright = false
 
