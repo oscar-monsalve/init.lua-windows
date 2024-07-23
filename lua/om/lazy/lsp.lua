@@ -25,46 +25,17 @@ return {
         require("fidget").setup({})
         require("mason").setup()
         require("mason-lspconfig").setup({
-            ensure_installed = {"lua_ls", "clangd", "texlab", "pylsp"},
+            ensure_installed = {"lua_ls", "texlab", "pylsp", "zls"},
             -- "rust_analyzer"
             -- "arduino_language_server"
 
             handlers = {
-
-                arduino_language_server = function()
-                    require('lspconfig').arduino_language_server.setup({
-                        cmd = {
-                            'arduino-language-server',
-                            '-cli-config', '~/AppData/Local/Arduino15/arduino-cli.yaml',
-                            '-cli', '~/AppData/Local/Programs/Arduino IDE/',
-                            '-clangd', '~/AppData/Local/nvim-data/mason/packages/clangd/clangd_17.0.3/bin',
-                            'fqbn', 'esp32:esp32:esp'
-                        }
-                    })
-                end,
-
                 function(server_name) -- default handler (optional)
 
                     require("lspconfig")[server_name].setup {
                         capabilities = capabilities
                     }
                 end,
-
-                --[[
-                ["arduino_language_server"] = function ()
-                    local lspconfig = require("lspconfig")
-                    lspconfig.arduino_language_server.setup {
-                        cmd = {
-                            'arduino-language-server',
-                            --'-cli-config', '%USERPROFILE%/AppData/Local/Arduino15/arduino-cli.yaml',
-                            --'-cli', '%USERPROFILE%/AppData/Local/Programs/Arduino IDE/arduino_cli.exe',
-                            --'-clangd', '%USERPROFILE%/AppData/Local/nvim-data/mason/packages/clangd/clangd_17.0.3/bin/clangd.exe',
-                            --'fqbn', 'esp32:esp32:esp'
-                        }
-                    }
-
-                end,
-                ]]--
 
                 ["lua_ls"] = function()
                     local lspconfig = require("lspconfig")
@@ -79,6 +50,18 @@ return {
                         }
                     }
                 end,
+
+                ["clangd"] = function()
+                    local lspconfig = require('lspconfig')
+                    lspconfig.clangd.setup{
+                        capabilities = capabilities,
+                        cmd = {'clangd', '--query-driver=C:/msys64/mingw64/bin/g++.exe'},
+                        filetypes = { "c", "cpp", "h", "hpp", "inl", "objc", "objcpp", "cuda", "proto" }
+                    }
+                end,
+
+
+
             }
         })
 
