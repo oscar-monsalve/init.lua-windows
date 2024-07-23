@@ -13,12 +13,6 @@ vim.g.mapleader = " "
 -- Exit to file navigation
 vim.keymap.set("n", "<leader>pv", vim.cmd.Ex)
 
--- Better window navigation
-vim.keymap.set("n", "<C-h>", "<C-w>h")
-vim.keymap.set("n", "<C-j>", "<C-w>j")
-vim.keymap.set("n", "<C-k>", "<C-w>k")
-vim.keymap.set("n", "<C-l>", "<C-w>l")
-
 -- Resize windows with arrows
 vim.keymap.set("n", "<C-Up>", ":resize -2<CR>")
 vim.keymap.set("n", "<C-Down>", ":resize +2<CR>")
