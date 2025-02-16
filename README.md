@@ -30,5 +30,5 @@ winget install Neovim.Neovim
 
 - luarocks 3.11.1:
 ```console
-[luarocks-3.11.1-windows-64.zip](https://luarocks.github.io/luarocks/releases/luarocks-3.11.1-windows-64.zip "download")
+winget https://luarocks.github.io/luarocks/releases/luarocks-3.11.1-windows-64.zip
 ```
