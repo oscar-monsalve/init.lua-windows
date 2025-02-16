@@ -28,7 +28,4 @@ winget install Neovim.Neovim
  winget install "Lua for Windows"
 ```
 
-- luarocks 3.11.1:
-```console
-winget https://luarocks.github.io/luarocks/releases/luarocks-3.11.1-windows-64.zip
-```
+- Download "luarocks-3.11.1-windows-64.zip", extract and add to SYSTEM PATH [luarocks-3.11.1-windows-64.zip](https://luarocks.github.io/luarocks/releases/)
