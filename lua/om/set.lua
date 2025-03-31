@@ -1,3 +1,6 @@
+vim.g.mapleader = " "
+vim.g.maplocalleader = " "
+
 vim.opt.nu = true
 vim.opt.relativenumber = true
 
@@ -34,9 +37,6 @@ vim.opt.isfname:append("@-@")
 vim.opt.updatetime = 50
 
 -- vim.opt.textwidth = 150
-vim.opt.colorcolumn = "118"
+vim.opt.colorcolumn = "117"
 
 vim.opt.splitright = false
-
-vim.g.mapleader = " "
-vim.g.maplocalleader = " "

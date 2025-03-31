@@ -25,11 +25,15 @@ return {
         require("fidget").setup({})
         require("mason").setup()
         require("mason-lspconfig").setup({
-            ensure_installed = {"pylsp", "zls", "marksman"},
-            -- "texlab" (latex)
-            -- "lua_ls"
-            -- "rust_analyzer"
-            -- "arduino_language_server"
+            ensure_installed = {
+                "pylsp",
+                "zls",
+                "marksman",
+                -- "texlab" (latex)
+                -- "lua_ls"
+                -- "rust_analyzer"
+                -- "arduino_language_server"
+            },
 
             handlers = {
                 function(server_name) -- default handler (optional)
@@ -90,6 +94,7 @@ return {
         })
 
         vim.diagnostic.config({
+            virtual_text = true,
             update_in_insert = false,
             float = {
                 focusable = false,
