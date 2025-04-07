@@ -10,6 +10,7 @@ return {
         "hrsh7th/nvim-cmp",
         "L3MON4D3/LuaSnip",
         "saadparwaiz1/cmp_luasnip",
+        "rafamadriz/friendly-snippets",
         "j-hui/fidget.nvim",
     },
 
@@ -22,6 +23,7 @@ return {
             vim.lsp.protocol.make_client_capabilities(),
             cmp_lsp.default_capabilities())
 
+        require("luasnip.loaders.from_vscode").lazy_load()
         require("fidget").setup({})
         require("mason").setup()
         require("mason-lspconfig").setup({
@@ -29,10 +31,10 @@ return {
                 "pylsp",
                 "zls",
                 "marksman",
-                -- "texlab" (latex)
-                -- "lua_ls"
-                -- "rust_analyzer"
-                -- "arduino_language_server"
+                -- "texlab",
+                -- "lua_ls",
+                -- "rust_analyzer",
+                -- "arduino_language_server",
             },
 
             handlers = {
@@ -79,6 +81,10 @@ return {
                     require('luasnip').lsp_expand(args.body) -- For `luasnip` users.
                 end,
             },
+            window = {
+                -- completion = cmp.config.window.bordered(),
+                documentation = cmp.config.window.bordered(),
+            },
             mapping = cmp.mapping.preset.insert({
                 ['<C-p>'] = cmp.mapping.select_prev_item(cmp_select),
                 ['<C-n>'] = cmp.mapping.select_next_item(cmp_select),
@@ -97,7 +103,7 @@ return {
             virtual_text = true,
             update_in_insert = false,
             float = {
-                focusable = false,
+                focusable = true,
                 style = "minimal",
                 border = "rounded",
                 source = "always",
