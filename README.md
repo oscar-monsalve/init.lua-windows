@@ -16,7 +16,17 @@ choco install git
 choco install ripgrep
 ```
 
-- MSYS2 [MSYS2 windows install](https://www.msys2.org/) (install gcc compiler for windows and add to PATH -> C:\msys64\mingw64\bin\).
+- fd:
+```console
+choco install fd
+```
+
+- make:
+```console
+choco install make
+```
+
+- MSYS2 [MSYS2 windows install](https://www.msys2.org/) (install gcc compiler for windows and add to PATH -> C:\msys64\mingw64\bin\ or C:\msys64\ucrt64\bin).
 
 - neovim:
 ```console
