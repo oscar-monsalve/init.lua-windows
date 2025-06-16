@@ -28,6 +28,10 @@ choco install make
 
 - MSYS2 [MSYS2 windows install](https://www.msys2.org/) (install gcc compiler for windows and add to PATH -> C:\msys64\mingw64\bin\ or C:\msys64\ucrt64\bin).
 
+- Install shell [oh-my-posh shell](https://ohmyposh.dev/docs/installation/windows)
+
+- Windows terminal [Windows terminal](https://learn.microsoft.com/en-us/windows/terminal/install)
+
 - neovim:
 ```console
 winget install Neovim.Neovim
