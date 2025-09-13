@@ -4,12 +4,14 @@ Neovim configuration for Windows OS.
 
 The repository can be cloned in:
 
-```C:\Users\%USERNAME%\AppData\Local\```
+```
+C:\Users\%USERNAME%\AppData\Local\
+```
 
 Make sure to rename the cloned directory as "```nvim```".
 
 
-### Install the following pre-requisites:
+## Install the following pre-requisites:
 
 - Packages:
 
@@ -17,14 +19,16 @@ Make sure to rename the cloned directory as "```nvim```".
 choco install git ripgrep fd make
 ```
 
-- MSYS2 [MSYS2 windows install](https://www.msys2.org/) (install gcc compiler for windows and add to PATH -> C:\msys64\mingw64\bin\ or C:\msys64\ucrt64\bin).
+- Install [MSYS2 Windows](https://www.msys2.org/):
 
-- Windows terminal [Windows terminal](https://learn.microsoft.com/en-us/windows/terminal/install)
+Make sure to add to PATH as ```C:\msys64\mingw64\bin\``` or ```C:\msys64\ucrt64\bin```.
 
-- Install shell [oh-my-posh shell](https://ohmyposh.dev/docs/installation/windows)
+- Install [Windows terminal](https://learn.microsoft.com/en-us/windows/terminal/install)
+
+- Install [oh-my-posh shell](https://ohmyposh.dev/docs/installation/windows)
 
 
-### Installing Neovim:
+## Installing Neovim:
 
 ```console
 winget install Neovim.Neovim
