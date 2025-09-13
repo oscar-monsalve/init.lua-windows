@@ -21,7 +21,7 @@ choco install git ripgrep fd make
 
 - Install [MSYS2 Windows](https://www.msys2.org/):
 
-Make sure to add to PATH as ```C:\msys64\mingw64\bin\``` or ```C:\msys64\ucrt64\bin```.
+    Make sure to add to PATH as ```C:\msys64\mingw64\bin\``` or ```C:\msys64\ucrt64\bin```.
 
 - Install [Windows terminal](https://learn.microsoft.com/en-us/windows/terminal/install)
 
@@ -44,4 +44,4 @@ winget install Neovim.Neovim
 
 [luarocks-3.11.1-windows-64.zip](https://luarocks.github.io/luarocks/releases/),
 
-Package manager: [lazy.nvim](https://github.com/folke/lazy.nvim)
+- Package manager: [lazy.nvim](https://github.com/folke/lazy.nvim)
