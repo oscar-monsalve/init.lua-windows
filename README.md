@@ -42,6 +42,6 @@ winget install Neovim.Neovim
 
 - Download luarocks, extract and add to SYSTEM PATH:
 
-[luarocks-3.11.1-windows-64.zip](https://luarocks.github.io/luarocks/releases/),
+[luarocks-3.11.1-windows-64.zip](https://luarocks.github.io/luarocks/releases/luarocks-3.11.1-windows-64.zip)
 
 - Package manager: [lazy.nvim](https://github.com/folke/lazy.nvim)
