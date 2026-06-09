@@ -1,6 +1,3 @@
-vim.g.mapleader = " "
-vim.g.maplocalleader = " "
-
 vim.opt.nu = true
 vim.opt.relativenumber = true
 
@@ -9,6 +6,10 @@ vim.opt.conceallevel = 2
 
 -- Sync clipboard between OS and nvim
 vim.opt.clipboard = "unnamedplus"
+
+-- Enable cursor line highlighting and restrict the highlight to only the line number
+vim.opt.cursorline = true
+vim.opt.cursorlineopt = "number"
 
 vim.opt.mousehide = true
 
@@ -36,7 +37,10 @@ vim.opt.isfname:append("@-@")
 
 vim.opt.updatetime = 50
 
--- vim.opt.textwidth = 150
+-- vim.opt.textwidth = 118
 vim.opt.colorcolumn = "117"
 
 vim.opt.splitright = false
+
+vim.g.mapleader = " "
+vim.g.maplocalleader = " "
