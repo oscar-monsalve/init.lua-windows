@@ -12,9 +12,15 @@ vim.keymap.set("n", "<leader>pv", vim.cmd.Ex)
 -- Toggle Markview to render .md files
 vim.keymap.set("n", "<leader>vv", ":Markview toggle<CR>")
 
+-- Enable English spell checking in the current buffer
+vim.keymap.set("n", "<leader>sp", function()
+    vim.opt_local.spell = true
+    vim.opt_local.spelllang = { "en_us" }
+end)
+
 -- Resize windows with arrows
-vim.keymap.set("n", "<C-Up>", ":resize -2<CR>")
-vim.keymap.set("n", "<C-Down>", ":resize +2<CR>")
+vim.keymap.set("n", "<C-Up>", ":resize +2<CR>")
+vim.keymap.set("n", "<C-Down>", ":resize -2<CR>")
 vim.keymap.set("n", "<C-Left>", ":vertical resize -2<CR>")
 vim.keymap.set("n", "<C-Right>", ":vertical resize +2<CR>")
 
