@@ -4,6 +4,10 @@ return {
 		build = ":TSUpdate",
 		lazy = false,
 		init = function()
+			if vim.fn.has("win32") == 1 and vim.fn.executable("cl") == 0 and vim.fn.executable("gcc") == 1 then
+				vim.env.CC = "gcc"
+			end
+
 			local parsers = {
 				"lua",
 				"vim",
