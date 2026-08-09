@@ -15,6 +15,12 @@ return {
     },
 
     config = function()
+        vim.filetype.add({
+            extension = {
+                ino = "arduino",
+            },
+        })
+
         local cmp = require('cmp')
         local cmp_lsp = require("cmp_nvim_lsp")
         local capabilities = vim.tbl_deep_extend(
@@ -31,10 +37,15 @@ return {
                 "pylsp",
                 "zls",
                 "marksman",
+                "clangd",
+                "arduino_language_server",
+                "lua_ls",
                 -- "texlab",
-                -- "lua_ls",
                 -- "rust_analyzer",
-                -- "arduino_language_server",
+            },
+
+            automatic_enable = {
+                exclude = { "arduino_language_server" },
             },
 
             handlers = {
@@ -72,6 +83,146 @@ return {
 
             }
         })
+
+        local function first_executable(paths)
+            for _, path in ipairs(paths) do
+                if path ~= "" and vim.fn.executable(path) == 1 then
+                    return path
+                end
+            end
+            return paths[#paths]
+        end
+
+        local function arduino_tool_paths()
+            local local_app_data = vim.env.LOCALAPPDATA or vim.fn.expand("~/AppData/Local")
+            local tools = vim.fs.joinpath(local_app_data, "Programs", "ArduinoTools", "bin")
+            local mason = vim.fs.joinpath(vim.fn.stdpath("data"), "mason", "packages")
+            local mason_clangd = vim.fn.glob(
+                vim.fs.joinpath(mason, "clangd", "clangd_*", "bin", "clangd.exe"),
+                false,
+                true
+            )[1] or ""
+
+            return {
+                language_server = first_executable({
+                    vim.fs.joinpath(tools, "arduino-language-server.exe"),
+                    vim.fs.joinpath(mason, "arduino-language-server", "arduino-language-server.exe"),
+                    vim.fn.exepath("arduino-language-server"),
+                }),
+                clangd = first_executable({
+                    vim.env.ARDUINO_CLANGD_PATH or "",
+                    vim.fs.joinpath(tools, "clangd.exe"),
+                    mason_clangd,
+                    vim.fn.exepath("clangd"),
+                }),
+                cli = first_executable({
+                    vim.fs.joinpath(tools, "arduino-cli.exe"),
+                    vim.fn.exepath("arduino-cli"),
+                }),
+                cli_config = vim.env.ARDUINO_CONFIG_FILE
+                    or vim.fs.joinpath(local_app_data, "Arduino15", "arduino-cli.yaml"),
+            }
+        end
+
+        local function sketch_fqbn(root_dir)
+            local config_path = vim.fs.joinpath(root_dir, "sketch.yaml")
+            if vim.fn.filereadable(config_path) == 1 then
+                for _, line in ipairs(vim.fn.readfile(config_path)) do
+                    local fqbn = line:match([[^%s*default_fqbn:%s*["']?([^%s"'#]+)]])
+                    if fqbn then
+                        return fqbn
+                    end
+                end
+            end
+
+            return vim.env.ARDUINO_FQBN or "esp32:esp32:esp32"
+        end
+
+        local arduino_restart_pending = false
+
+        local function arduino_lsp_error(code, err)
+            local message = type(err) == "table" and type(err.error) == "table"
+                and tostring(err.error.message)
+                or tostring(err)
+            local invalid_message = vim.lsp.rpc.client_errors.INVALID_SERVER_MESSAGE
+
+            if code == invalid_message and message:find("trying to get preamble for non-added document", 1, true) then
+                if arduino_restart_pending then
+                    return
+                end
+                arduino_restart_pending = true
+                vim.notify("Arduino LSP lost synchronization; restarting it.", vim.log.levels.WARN)
+                vim.schedule(function()
+                    local buffers = {}
+                    for _, client in ipairs(vim.lsp.get_clients({ name = "arduino_language_server" })) do
+                        for bufnr in pairs(client.attached_buffers) do
+                            buffers[bufnr] = true
+                        end
+                    end
+                    vim.lsp.enable("arduino_language_server", false)
+                    vim.defer_fn(function()
+                        vim.lsp.enable("arduino_language_server", true)
+                        for bufnr in pairs(buffers) do
+                            if vim.api.nvim_buf_is_valid(bufnr) and vim.bo[bufnr].filetype == "arduino" then
+                                local config = vim.deepcopy(vim.lsp.config.arduino_language_server)
+                                config.root_dir = vim.fs.dirname(vim.api.nvim_buf_get_name(bufnr))
+                                vim.lsp.start(config, { bufnr = bufnr })
+                            end
+                        end
+                        arduino_restart_pending = false
+                    end, 500)
+                end)
+                return
+            end
+
+            local error_name = vim.lsp.rpc.client_errors[code] or tostring(code)
+            vim.notify(
+                ("LSP[arduino_language_server]: Error %s: %s"):format(error_name, vim.inspect(err)),
+                vim.log.levels.ERROR
+            )
+        end
+
+        vim.lsp.config("arduino_language_server", {
+            capabilities = vim.tbl_deep_extend("force", {}, capabilities, {
+                textDocument = { semanticTokens = vim.NIL },
+                workspace = { semanticTokens = vim.NIL },
+            }),
+            root_dir = function(bufnr, on_dir)
+                local path = vim.api.nvim_buf_get_name(bufnr)
+                if path ~= "" then
+                    on_dir(vim.fs.dirname(path))
+                end
+            end,
+            workspace_required = true,
+            -- Batched incremental changes can desynchronize Arduino LS's .ino-to-.cpp mapper.
+            flags = {
+                debounce_text_changes = 0,
+            },
+            on_error = arduino_lsp_error,
+            on_exit = function(code, signal)
+                if arduino_restart_pending or code == 0 then
+                    return
+                end
+                vim.notify(
+                    ("Arduino LSP exited with code %d and signal %d."):format(code, signal),
+                    vim.log.levels.ERROR
+                )
+            end,
+            cmd = function(dispatchers, config)
+                local tools = arduino_tool_paths()
+                local command = {
+                    tools.language_server,
+                    "-clangd", tools.clangd,
+                    "-cli", tools.cli,
+                    "-cli-config", tools.cli_config,
+                    "-fqbn", sketch_fqbn(config.root_dir),
+                    "-jobs", "0",
+                }
+
+                return vim.lsp.rpc.start(command, dispatchers)
+            end,
+        })
+        vim.lsp.enable("arduino_language_server")
 
         local cmp_select = { behavior = cmp.SelectBehavior.Select }
 
