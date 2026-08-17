@@ -140,46 +140,41 @@ return {
 
         local arduino_restart_pending = false
 
-        local function arduino_lsp_error(code, err)
+        local function is_arduino_sync_error(code, err)
             local message = type(err) == "table" and type(err.error) == "table"
                 and tostring(err.error.message)
                 or tostring(err)
-            local invalid_message = vim.lsp.rpc.client_errors.INVALID_SERVER_MESSAGE
 
-            if code == invalid_message and message:find("trying to get preamble for non-added document", 1, true) then
-                if arduino_restart_pending then
-                    return
-                end
-                arduino_restart_pending = true
-                vim.notify("Arduino LSP lost synchronization; restarting it.", vim.log.levels.WARN)
-                vim.schedule(function()
-                    local buffers = {}
-                    for _, client in ipairs(vim.lsp.get_clients({ name = "arduino_language_server" })) do
-                        for bufnr in pairs(client.attached_buffers) do
-                            buffers[bufnr] = true
-                        end
-                    end
-                    vim.lsp.enable("arduino_language_server", false)
-                    vim.defer_fn(function()
-                        vim.lsp.enable("arduino_language_server", true)
-                        for bufnr in pairs(buffers) do
-                            if vim.api.nvim_buf_is_valid(bufnr) and vim.bo[bufnr].filetype == "arduino" then
-                                local config = vim.deepcopy(vim.lsp.config.arduino_language_server)
-                                config.root_dir = vim.fs.dirname(vim.api.nvim_buf_get_name(bufnr))
-                                vim.lsp.start(config, { bufnr = bufnr })
-                            end
-                        end
-                        arduino_restart_pending = false
-                    end, 500)
-                end)
+            return code == vim.lsp.rpc.client_errors.INVALID_SERVER_MESSAGE
+                and message:find("trying to get preamble for non-added document", 1, true) ~= nil
+        end
+
+        local function restart_arduino_lsp()
+            if arduino_restart_pending then
                 return
             end
-
-            local error_name = vim.lsp.rpc.client_errors[code] or tostring(code)
-            vim.notify(
-                ("LSP[arduino_language_server]: Error %s: %s"):format(error_name, vim.inspect(err)),
-                vim.log.levels.ERROR
-            )
+            arduino_restart_pending = true
+            vim.notify("Arduino LSP lost synchronization; restarting it.", vim.log.levels.WARN)
+            vim.schedule(function()
+                local buffers = {}
+                for _, client in ipairs(vim.lsp.get_clients({ name = "arduino_language_server" })) do
+                    for bufnr in pairs(client.attached_buffers) do
+                        buffers[bufnr] = true
+                    end
+                end
+                vim.lsp.enable("arduino_language_server", false)
+                vim.defer_fn(function()
+                    vim.lsp.enable("arduino_language_server", true)
+                    for bufnr in pairs(buffers) do
+                        if vim.api.nvim_buf_is_valid(bufnr) and vim.bo[bufnr].filetype == "arduino" then
+                            local config = vim.deepcopy(vim.lsp.config.arduino_language_server)
+                            config.root_dir = vim.fs.dirname(vim.api.nvim_buf_get_name(bufnr))
+                            vim.lsp.start(config, { bufnr = bufnr })
+                        end
+                    end
+                    arduino_restart_pending = false
+                end, 500)
+            end)
         end
 
         vim.lsp.config("arduino_language_server", {
@@ -198,16 +193,6 @@ return {
             flags = {
                 debounce_text_changes = 0,
             },
-            on_error = arduino_lsp_error,
-            on_exit = function(code, signal)
-                if arduino_restart_pending or code == 0 then
-                    return
-                end
-                vim.notify(
-                    ("Arduino LSP exited with code %d and signal %d."):format(code, signal),
-                    vim.log.levels.ERROR
-                )
-            end,
             cmd = function(dispatchers, config)
                 local tools = arduino_tool_paths()
                 local command = {
@@ -219,7 +204,26 @@ return {
                     "-jobs", "0",
                 }
 
-                return vim.lsp.rpc.start(command, dispatchers)
+                local suppress_exit = false
+                local rpc_dispatchers = vim.tbl_extend("force", {}, dispatchers, {
+                    on_error = function(code, err)
+                        if is_arduino_sync_error(code, err) then
+                            suppress_exit = true
+                            restart_arduino_lsp()
+                            return
+                        end
+                        dispatchers.on_error(code, err)
+                    end,
+                    on_exit = function(code, signal)
+                        if suppress_exit then
+                            dispatchers.on_exit(0, signal)
+                            return
+                        end
+                        dispatchers.on_exit(code, signal)
+                    end,
+                })
+
+                return vim.lsp.rpc.start(command, rpc_dispatchers)
             end,
         })
         vim.lsp.enable("arduino_language_server")
