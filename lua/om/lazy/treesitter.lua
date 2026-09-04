@@ -14,6 +14,7 @@ return {
 				"vimdoc",
                 "python",
                 "c",
+                "cpp",
                 "zig",
                 "bash",
                 "latex",
