@@ -29,9 +29,147 @@ return {
             vim.lsp.protocol.make_client_capabilities(),
             cmp_lsp.default_capabilities())
 
+        local function first_executable(paths)
+            for _, path in ipairs(paths) do
+                if path and path ~= "" and vim.fn.executable(path) == 1 then
+                    local resolved = vim.fn.exepath(path)
+                    return vim.fs.normalize(resolved ~= "" and resolved or path)
+                end
+            end
+        end
+
+        local function mason_executable(package, executable)
+            local package_path = vim.fs.joinpath(vim.fn.stdpath("data"), "mason", "packages", package)
+            local matches = vim.fn.glob(
+                vim.fs.joinpath(package_path, "*", "bin", executable),
+                false,
+                true
+            )
+            table.insert(matches, vim.fs.joinpath(package_path, "bin", executable))
+            table.insert(matches, vim.fs.joinpath(package_path, executable))
+            table.sort(matches)
+
+            for index = #matches, 1, -1 do
+                local path = first_executable({ matches[index] })
+                if path then
+                    return path
+                end
+            end
+        end
+
+        local function discovered_compilers()
+            local system_drive = vim.env.SystemDrive or "C:"
+            local msys_root = vim.env.MSYS2_ROOT or vim.fs.joinpath(system_drive, "msys64")
+            local candidates = {
+                vim.env.CC or "",
+                vim.env.CXX or "",
+                "gcc",
+                "g++",
+                "clang",
+                "clang++",
+            }
+
+            for _, environment in ipairs({ "ucrt64", "mingw64", "clang64" }) do
+                for _, executable in ipairs({ "gcc.exe", "g++.exe", "clang.exe", "clang++.exe" }) do
+                    table.insert(candidates, vim.fs.joinpath(msys_root, environment, "bin", executable))
+                end
+            end
+
+            local compilers = {}
+            local seen = {}
+            for _, candidate in ipairs(candidates) do
+                local path = first_executable({ candidate })
+                local key = path and path:lower()
+                if key and not seen[key] then
+                    seen[key] = true
+                    table.insert(compilers, path)
+                end
+            end
+            return compilers
+        end
+
+        local function compiler_fallback_flags(compilers)
+            local compiler = compilers[1]
+            if not compiler then
+                return {}
+            end
+
+            for _, candidate in ipairs(compilers) do
+                if candidate:lower():match("%+%+%.exe$") then
+                    compiler = candidate
+                    break
+                end
+            end
+
+            local flags = {}
+            local target = vim.system({ compiler, "-dumpmachine" }, { text = true }):wait()
+            if target.code == 0 and target.stdout then
+                target.stdout = vim.trim(target.stdout)
+                if target.stdout ~= "" then
+                    table.insert(flags, "--target=" .. target.stdout)
+                end
+            end
+
+            local includes = vim.system(
+                { compiler, "-E", "-x", "c++", "-", "-v" },
+                { stdin = "", text = true }
+            ):wait()
+            local output = (includes.stdout or "") .. "\n" .. (includes.stderr or "")
+            local reading_includes = false
+            for line in output:gmatch("[^\r\n]+") do
+                line = vim.trim(line)
+                if line == "#include <...> search starts here:" then
+                    reading_includes = true
+                elseif reading_includes and line == "End of search list." then
+                    break
+                elseif reading_includes then
+                    line = line:gsub(" %(framework directory%)$", "")
+                    if vim.fn.isdirectory(line) == 1 then
+                        table.insert(flags, "-isystem")
+                        table.insert(flags, vim.fs.normalize(line))
+                    end
+                end
+            end
+            return flags
+        end
+
         require("luasnip.loaders.from_vscode").lazy_load()
         require("fidget").setup({})
         require("mason").setup()
+
+        local compilers = discovered_compilers()
+        local clangd_command = {
+            first_executable({ vim.env.CLANGD_PATH or "", mason_executable("clangd", "clangd.exe"), "clangd" }) or "clangd",
+        }
+        local query_drivers = vim.env.CLANGD_QUERY_DRIVER or table.concat(compilers, ",")
+        if query_drivers ~= "" then
+            table.insert(clangd_command, "--query-driver=" .. query_drivers:gsub("\\", "/"))
+        end
+
+        vim.lsp.config("clangd", {
+            capabilities = capabilities,
+            cmd = clangd_command,
+            init_options = {
+                fallbackFlags = compiler_fallback_flags(compilers),
+            },
+            filetypes = { "c", "cpp", "objc", "objcpp", "cuda", "proto" },
+        })
+
+        vim.lsp.config("lua_ls", {
+            capabilities = capabilities,
+            settings = {
+                Lua = {
+                    diagnostics = {
+                        globals = { "vim", "it", "describe", "before_each", "after_each" },
+                    },
+                },
+            },
+        })
+
+        for _, server in ipairs({ "pylsp", "zls", "marksman" }) do
+            vim.lsp.config(server, { capabilities = capabilities })
+        end
+
         require("mason-lspconfig").setup({
             ensure_installed = {
                 "pylsp",
@@ -47,77 +185,32 @@ return {
             automatic_enable = {
                 exclude = { "arduino_language_server" },
             },
-
-            handlers = {
-                function(server_name) -- default handler (optional)
-
-                    require("lspconfig")[server_name].setup {
-                        capabilities = capabilities
-                    }
-                end,
-
-                ["lua_ls"] = function()
-                    local lspconfig = require("lspconfig")
-                    lspconfig.lua_ls.setup {
-                        capabilities = capabilities,
-                        settings = {
-                            Lua = {
-                                diagnostics = {
-                                    globals = { "vim", "it", "describe", "before_each", "after_each" },
-                                }
-                            }
-                        }
-                    }
-                end,
-
-                ["clangd"] = function()
-                    local lspconfig = require('lspconfig')
-                    lspconfig.clangd.setup{
-                        capabilities = capabilities,
-                        cmd = {'clangd', '--query-driver=C:/msys64/mingw64/bin/g++.exe'},
-                        filetypes = { "c", "cpp", "h", "hpp", "inl", "objc", "objcpp", "cuda", "proto" }
-                    }
-                end,
-
-
-
-            }
         })
-
-        local function first_executable(paths)
-            for _, path in ipairs(paths) do
-                if path ~= "" and vim.fn.executable(path) == 1 then
-                    return path
-                end
-            end
-            return paths[#paths]
-        end
 
         local function arduino_tool_paths()
             local local_app_data = vim.env.LOCALAPPDATA or vim.fn.expand("~/AppData/Local")
             local tools = vim.fs.joinpath(local_app_data, "Programs", "ArduinoTools", "bin")
-            local mason = vim.fs.joinpath(vim.fn.stdpath("data"), "mason", "packages")
-            local mason_clangd = vim.fn.glob(
-                vim.fs.joinpath(mason, "clangd", "clangd_*", "bin", "clangd.exe"),
-                false,
-                true
-            )[1] or ""
+            local arduino_ide = vim.fs.joinpath(local_app_data, "Programs", "Arduino IDE")
 
             return {
                 language_server = first_executable({
+                    vim.env.ARDUINO_LANGUAGE_SERVER_PATH or "",
+                    mason_executable("arduino-language-server", "arduino-language-server.exe"),
                     vim.fs.joinpath(tools, "arduino-language-server.exe"),
-                    vim.fs.joinpath(mason, "arduino-language-server", "arduino-language-server.exe"),
-                    vim.fn.exepath("arduino-language-server"),
+                    "arduino-language-server",
                 }),
                 clangd = first_executable({
                     vim.env.ARDUINO_CLANGD_PATH or "",
+                    mason_executable("clangd", "clangd.exe"),
                     vim.fs.joinpath(tools, "clangd.exe"),
-                    mason_clangd,
-                    vim.fn.exepath("clangd"),
+                    "clangd",
                 }),
                 cli = first_executable({
+                    vim.env.ARDUINO_CLI_PATH or "",
                     vim.fs.joinpath(tools, "arduino-cli.exe"),
-                    vim.fn.exepath("arduino-cli"),
+                    vim.fs.joinpath(arduino_ide, "arduino-cli.exe"),
+                    vim.fs.joinpath(arduino_ide, "resources", "app", "lib", "backend", "resources", "arduino-cli.exe"),
+                    "arduino-cli",
                 }),
                 cli_config = vim.env.ARDUINO_CONFIG_FILE
                     or vim.fs.joinpath(local_app_data, "Arduino15", "arduino-cli.yaml"),
@@ -195,14 +288,21 @@ return {
             },
             cmd = function(dispatchers, config)
                 local tools = arduino_tool_paths()
+                assert(tools.language_server, "Arduino LSP: arduino-language-server is not installed")
+                assert(tools.clangd, "Arduino LSP: clangd is not installed")
+                assert(tools.cli, "Arduino LSP: arduino-cli is not installed; set ARDUINO_CLI_PATH or add it to PATH")
+
                 local command = {
                     tools.language_server,
                     "-clangd", tools.clangd,
                     "-cli", tools.cli,
-                    "-cli-config", tools.cli_config,
                     "-fqbn", sketch_fqbn(config.root_dir),
                     "-jobs", "0",
                 }
+                if vim.fn.filereadable(tools.cli_config) == 1 then
+                    table.insert(command, "-cli-config")
+                    table.insert(command, tools.cli_config)
+                end
 
                 local suppress_exit = false
                 local rpc_dispatchers = vim.tbl_extend("force", {}, dispatchers, {
