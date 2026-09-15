@@ -15,6 +15,7 @@ return {
                 "python",
                 "c",
                 "cpp",
+                "arduino",
                 "zig",
                 "bash",
                 "latex",
